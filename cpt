@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# copies the text of a file
+# Optionally exclude commented lines and/or empty lines with the -c or -b flags
+
+exclude_comments=false
+exclude_blank_lines=false
+
+show_help() {
+  echo "Usage: $0 [options] <file>"
+  echo ""
+  echo "Options:"
+  echo "  -c    Exclude comment lines (lines starting with #)"
+  echo "  -b    Exclude blank lines"
+  echo "  -h    Show this help message"
+  echo ""
+  echo "Note: The shebang line (if present) will always be included."
+}
+
+while getopts ":cbh" opt; do
+  case $opt in
+    c) exclude_comments=true ;;
+    b) exclude_blank_lines=true ;;
+    h) show_help; exit 0 ;;
+    \?) echo "Invalid option: -$OPTARG" >&2; exit 1 ;;
+  esac
+done
+
+shift $((OPTIND -1))
+
+file="$1"
+
+if [[ -z "$file" ]]; then
+  echo "Error: No file specified." >&2
+  show_help
+  exit 1
+fi
+
+if [[ ! -f "$file" ]]; then
+  echo "File not found: $file" >&2
+  exit 1
+fi
+
+# Read and process the file
+{
+  read -r first_line
+  echo "$first_line"  # Print the first line (shebang or not)
+
+  while IFS= read -r line; do
+    # Exclude comments if the flag is set
+    if $exclude_comments && [[ "$line" =~ ^[[:space:]]*# ]]; then
+      continue
+    fi
+
+    # Exclude blank lines if the flag is set
+    if $exclude_blank_lines && [[ -z "$line" ]]; then
+      continue
+    fi
+
+    echo "$line"
+  done
+} < "$file" | xclip -selection c
+

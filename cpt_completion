@@ -1,0 +1,16 @@
+_cpt_completions()
+{
+    local cur opts
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    opts="-c -b -h"
+
+    # Complete options if the current word matches an option pattern
+    if [[ "$cur" == -* ]]; then
+        COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+    else
+        # Complete filenames otherwise
+        COMPREPLY=( $(compgen -f -- "${cur}") )
+    fi
+}
+complete -F _cpt_completions cpt
+
